@@ -32,7 +32,12 @@ import javax.swing.BoxLayout;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 
-public class AnwesenheitsSimulation extends JFrame {
+import com.github.kwhat.jnativehook.GlobalScreen;
+import com.github.kwhat.jnativehook.NativeHookException;
+import com.github.kwhat.jnativehook.keyboard.NativeKeyEvent;
+import com.github.kwhat.jnativehook.keyboard.NativeKeyListener;
+
+public class AnwesenheitsSimulation extends JFrame implements NativeKeyListener {
 
 	private static final int START_DELAY = 30 * 1000; // in Millisekunden
 	private static final long serialVersionUID = 1815021257113792239L;
@@ -69,7 +74,19 @@ public class AnwesenheitsSimulation extends JFrame {
 				setRunning(!isRunning);
 			}
 		});
+
+		// register global keylistener
+		try {
+			GlobalScreen.registerNativeHook();
+			GlobalScreen.addNativeKeyListener(this);
+		} catch (final NativeHookException e1) {
+			e1.printStackTrace();
+		}
+
+		// show window
 		setVisible(true);
+
+		// endlosloop zur Maousüberwachung.
 		try {
 			robot = new Robot();
 			while (true) { // NOSONAR
@@ -79,6 +96,7 @@ public class AnwesenheitsSimulation extends JFrame {
 		} catch (final AWTException | InterruptedException e) { // NOSONAR
 			e.printStackTrace();
 		}
+
 	}
 
 	private void moveMouse() {
@@ -105,6 +123,7 @@ public class AnwesenheitsSimulation extends JFrame {
 		final PointerInfo pointerInfo = MouseInfo.getPointerInfo();
 		// Location-Objekt (Point) vom PointerInfo erhalten
 		final Point currentLocation = pointerInfo.getLocation();
+
 		if (lastLocation.x == currentLocation.x && lastLocation.y == currentLocation.y) {
 			// mouse wurde nicht bewegt!
 			final long timeMillis = System.currentTimeMillis();
@@ -112,15 +131,14 @@ public class AnwesenheitsSimulation extends JFrame {
 				notMovedSince = timeMillis;
 			} else {
 				final long timeNotMoved = timeMillis - notMovedSince;
-				labelStatus.setText("Mouse not moving: " + timeNotMoved / 1000 + "s");
+				labelStatus.setText("User inactive for: " + timeNotMoved / 1000 + " seconds");
 				if (timeNotMoved > START_DELAY) {
 					// wenn länger die Mous nicht bewegt wurde
 					setRunning(true);
 				}
 			}
 		} else {
-			notMovedSince = 0;
-			labelStatus.setText("Mouse is moved");
+			setUserWasActive("Mouse-moved");
 			if (isRunning && isMousOutsideFrame(currentLocation)) {
 				setRunning(false);
 			}
@@ -128,9 +146,14 @@ public class AnwesenheitsSimulation extends JFrame {
 		lastLocation = currentLocation;
 	}
 
+	private void setUserWasActive(final String what) {
+		notMovedSince = 0;
+		labelStatus.setText("User aktiv detected - " + what);
+	}
+
 	private void setRunning(final boolean isRun) {
 		isRunning = isRun;
-		label.setText("Running " + isRunning);
+		label.setText("Simulating activity: " + isRunning);
 	}
 
 	private void increaseDelta() {
@@ -141,6 +164,11 @@ public class AnwesenheitsSimulation extends JFrame {
 		if (delta <= -100) {
 			vorzeichen = 1;
 		}
+	}
+
+	@Override
+	public void nativeKeyPressed(final NativeKeyEvent e) {
+		setUserWasActive("Keay pressd " + NativeKeyEvent.getKeyText(e.getKeyCode()));
 	}
 
 	public static void main(final String[] args) {
