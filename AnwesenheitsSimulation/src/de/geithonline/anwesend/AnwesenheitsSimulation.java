@@ -47,7 +47,6 @@ public class AnwesenheitsSimulation extends JFrame implements NativeKeyListener 
 	private int vorzeichen = 1;
 	private boolean isRunning = false;
 	private final JLabel label = new JLabel("---");
-	private final JLabel labelStatus = new JLabel("---");
 	private final JLabel labelImg = new JLabel("");
 	private Point lastLocation = new Point(0, 0);
 	private long notMovedSince = 0;
@@ -58,7 +57,6 @@ public class AnwesenheitsSimulation extends JFrame implements NativeKeyListener 
 	public void addComponentsToPane(final Container container) {
 		container.setLayout(new BoxLayout(container, BoxLayout.Y_AXIS));
 		container.add(label);
-		container.add(labelStatus);
 		container.add(labelImg);
 	}
 
@@ -131,14 +129,14 @@ public class AnwesenheitsSimulation extends JFrame implements NativeKeyListener 
 				notMovedSince = timeMillis;
 			} else {
 				final long timeNotMoved = timeMillis - notMovedSince;
-				labelStatus.setText("User inactive for: " + timeNotMoved / 1000 + " seconds");
+				label.setText("User inactive for: " + timeNotMoved / 1000 + " seconds");
 				if (timeNotMoved > START_DELAY) {
 					// wenn länger die Mous nicht bewegt wurde
 					setRunning(true);
 				}
 			}
 		} else {
-			setUserWasActive("Mouse-moved");
+			setUserWasActive("");
 			if (isRunning && isMousOutsideFrame(currentLocation)) {
 				setRunning(false);
 			}
@@ -148,7 +146,6 @@ public class AnwesenheitsSimulation extends JFrame implements NativeKeyListener 
 
 	private void setUserWasActive(final String what) {
 		notMovedSince = 0;
-		labelStatus.setText("User aktiv detected - " + what);
 	}
 
 	private void setRunning(final boolean isRun) {
