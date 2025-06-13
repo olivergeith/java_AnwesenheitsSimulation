@@ -20,15 +20,16 @@
 package de.geithonline.anwesend;
 
 import java.awt.AWTException;
+import java.awt.Color;
 import java.awt.Container;
 import java.awt.MouseInfo;
 import java.awt.Point;
 import java.awt.PointerInfo;
 import java.awt.Robot;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
+import java.net.URL;
 
 import javax.swing.BoxLayout;
+import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 
@@ -45,15 +46,20 @@ public class AnwesenheitsSimulation extends JFrame implements NativeKeyListener 
 	private int delta = 0;
 	private int vorzeichen = 1;
 	private boolean isRunning = false;
-	private final JLabel label = new JLabel("Running " + isRunning);
+	private final JLabel label = new JLabel("---");
 	private final JLabel labelStatus = new JLabel("---");
+	private final JLabel labelImg = new JLabel("");
 	private Point lastLocation = new Point(0, 0);
 	private long notMovedSince = 0;
+
+	URL gifUrl = getClass().getResource("working4.gif");
+	private final ImageIcon working = new ImageIcon(gifUrl);
 
 	public void addComponentsToPane(final Container container) {
 		container.setLayout(new BoxLayout(container, BoxLayout.Y_AXIS));
 		container.add(label);
 		container.add(labelStatus);
+		container.add(labelImg);
 	}
 
 	/**
@@ -68,13 +74,7 @@ public class AnwesenheitsSimulation extends JFrame implements NativeKeyListener 
 		setResizable(false);
 
 		addComponentsToPane(getContentPane());
-		addKeyListener(new KeyAdapter() {
-			@Override
-			public void keyPressed(final KeyEvent e) {
-				setRunning(!isRunning);
-			}
-		});
-
+		setRunning(false);
 		// register global keylistener
 		try {
 			GlobalScreen.registerNativeHook();
@@ -154,6 +154,13 @@ public class AnwesenheitsSimulation extends JFrame implements NativeKeyListener 
 	private void setRunning(final boolean isRun) {
 		isRunning = isRun;
 		label.setText("Simulating activity: " + isRunning);
+		if (isRun) {
+			labelImg.setIcon(working);
+			getContentPane().setBackground(new Color(128, 255, 128));
+		} else {
+			getContentPane().setBackground(Color.LIGHT_GRAY);
+			labelImg.setIcon(null);
+		}
 	}
 
 	private void increaseDelta() {
