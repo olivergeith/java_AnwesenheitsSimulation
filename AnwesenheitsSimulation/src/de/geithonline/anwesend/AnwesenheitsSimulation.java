@@ -26,7 +26,6 @@ import java.awt.MouseInfo;
 import java.awt.Point;
 import java.awt.PointerInfo;
 import java.awt.Robot;
-import java.net.URL;
 
 import javax.swing.BoxLayout;
 import javax.swing.ImageIcon;
@@ -51,8 +50,8 @@ public class AnwesenheitsSimulation extends JFrame implements NativeKeyListener 
 	private Point lastLocation = new Point(0, 0);
 	private long notMovedSince = 0;
 
-	URL gifUrl = getClass().getResource("working4.gif");
-	private final ImageIcon working = new ImageIcon(gifUrl);
+	private final ImageIcon working = new ImageIcon(getClass().getResource("working3.gif"));
+	private Point lastKnownMousePos = null;
 
 	public void addComponentsToPane(final Container container) {
 		container.setLayout(new BoxLayout(container, BoxLayout.Y_AXIS));
@@ -118,10 +117,7 @@ public class AnwesenheitsSimulation extends JFrame implements NativeKeyListener 
 	}
 
 	private void check4Inactivity() {
-		final PointerInfo pointerInfo = MouseInfo.getPointerInfo();
-		// Location-Objekt (Point) vom PointerInfo erhalten
-		final Point currentLocation = pointerInfo.getLocation();
-
+		final Point currentLocation = getCurrentMousePosition();
 		if (lastLocation.x == currentLocation.x && lastLocation.y == currentLocation.y) {
 			// mouse wurde nicht bewegt!
 			final long timeMillis = System.currentTimeMillis();
@@ -144,6 +140,12 @@ public class AnwesenheitsSimulation extends JFrame implements NativeKeyListener 
 		lastLocation = currentLocation;
 	}
 
+	private Point getCurrentMousePosition() {
+		final PointerInfo pointerInfo = MouseInfo.getPointerInfo();
+		final Point currentLocation = pointerInfo.getLocation();
+		return currentLocation;
+	}
+
 	private void setUserWasActive(final String what) {
 		notMovedSince = 0;
 	}
@@ -152,9 +154,14 @@ public class AnwesenheitsSimulation extends JFrame implements NativeKeyListener 
 		isRunning = isRun;
 		label.setText("Simulating activity: " + isRunning);
 		if (isRun) {
+			lastKnownMousePos = getCurrentMousePosition();
 			labelImg.setIcon(working);
 			getContentPane().setBackground(new Color(128, 255, 128));
 		} else {
+			if (lastKnownMousePos != null) {
+				robot.mouseMove(lastKnownMousePos.x, lastKnownMousePos.y);
+				lastKnownMousePos = null;
+			}
 			getContentPane().setBackground(Color.LIGHT_GRAY);
 			labelImg.setIcon(null);
 		}
